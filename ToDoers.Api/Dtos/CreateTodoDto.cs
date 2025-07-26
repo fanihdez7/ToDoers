@@ -5,7 +5,7 @@ namespace ToDoers.Api.Dtos
     public record class CreateTodoDto(
         
         [Required] String Text,
-        String Tag,
+        int TagId,
         int Priority,
         DateOnly Deadline
     );

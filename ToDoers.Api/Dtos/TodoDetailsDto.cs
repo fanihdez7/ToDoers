@@ -1,9 +1,9 @@
 ﻿namespace ToDoers.Api.Dtos
 {
-    public record class TodoDto(
+    public record class TodoDetailsDto(
         int Id, 
         String Text,
-        String Tag,
+        int TagId,
         int Priority,
         DateOnly Deadline
     );

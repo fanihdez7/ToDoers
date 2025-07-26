@@ -13,4 +13,6 @@ var app = builder.Build();
 
 app.MapTodosEndpoints();
 
+app.MigrateDb();
+
 app.Run();

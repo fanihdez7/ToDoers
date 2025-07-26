@@ -1,6 +1,10 @@
 ﻿namespace ToDoers.Api.Endpoints
 {
+    using Microsoft.EntityFrameworkCore;
+    using ToDoers.Api.Data;
     using ToDoers.Api.Dtos;
+    using ToDoers.Api.Entities;
+    using ToDoers.Api.Mapping;
 
     /// <summary>
     /// Defines the <see cref="ToDosEndpoints" />
@@ -12,26 +16,7 @@
         /// </summary>
         internal const string GetToDoEndpointName = "GetToDo";
 
-        /// <summary>
-        /// Defines the ToDos
-        /// </summary>
-        private static readonly List<TodoDto> ToDos =
-        [
-            new (
-                1,
-                "Finish the course",
-                "C#; Programming; .net8",
-                2,
-                new DateOnly(2025,9,1)
-            ),
-            new (
-                2,
-                "Develop first app ToDoers",
-                "C#; Programming; .net8; angular",
-                1,
-                new DateOnly(2025,8,22)
-            )
-        ];
+        
 
         /// <summary>
         /// The MapTodosEndpoints
@@ -45,51 +30,56 @@
 
             
 
-            group.MapGet("/", () => ToDos);
+            group.MapGet("/", 
+                (TodoContext dbContext) =>                
+                    dbContext.Todos
+                            .Include(todo => todo.Tag)
+                            .Select(todo => todo.ToSummaryDto())
+                            .AsNoTracking()
+                );
 
-            group.MapGet("/{id}", (int id) =>
+            group.MapGet("/{id}", (int id, TodoContext dbContext) =>
             {
 
-                TodoDto? todo = ToDos.Find(todo => todo.Id == id);
-                return todo is null ? Results.NotFound() : Results.Ok(todo);
+                Todo? todo = dbContext.Todos.Find(id);
+                return todo is null ? Results.NotFound() : Results.Ok(todo.ToDetailDto());
 
             }).WithName(GetToDoEndpointName);
 
-            group.MapPost("/", (CreateTodoDto newToDo) =>
+            group.MapPost("/", (CreateTodoDto newToDo, TodoContext dbContext) =>
             {
-                TodoDto ToDo = new(
-                    ToDos.Count + 1,
-                    newToDo.Text,
-                    newToDo.Tag,
-                    newToDo.Priority,
-                    newToDo.Deadline
-                );
-                ToDos.Add(ToDo);
 
-                return Results.CreatedAtRoute(GetToDoEndpointName, new { id = ToDo.Id }, ToDo);
+
+                Todo todo = newToDo.ToEntity();                
+
+                dbContext.Todos.Add(todo);
+                dbContext.SaveChanges();
+                
+                return Results.CreatedAtRoute(GetToDoEndpointName, new { id = todo.Id }, todo.ToDetailDto());
             });
 
-            group.MapPut("/{id}", (int id, UpdateTodoDto update) =>
+            group.MapPut("/{id}", (int id, UpdateTodoDto update, TodoContext dbContext) =>
             {
+                Todo todo = dbContext.Todos.Find(id);
 
-                var index = ToDos.FindIndex(todo => todo.Id == id);
-                if (index == -1)
+                if (todo is null)
                 {
                     return Results.NotFound();
                 }
-                ToDos[index] = new TodoDto(
-                    id,
-                    update.Text,
-                    update.Tag,
-                    update.Priority,
-                    update.Deadline
-                );
+                
+                dbContext.Entry(todo)
+                    .CurrentValues
+                    .SetValues(update.ToEntity(id));
+
+                dbContext.SaveChanges();
+
                 return Results.NoContent();
             });
 
-            group.MapDelete("/{id}", (int id) =>
+            group.MapDelete("/{id}", (int id, TodoContext dbContext) =>
             {
-                ToDos.RemoveAll(todo => todo.Id == id);
+                dbContext.Todos.Where(todo => todo.Id == id).ExecuteDelete();
+                
                 return Results.NoContent();
             });
 
