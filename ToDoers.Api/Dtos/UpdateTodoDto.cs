@@ -1,7 +1,9 @@
-﻿namespace ToDoers.Api.Dtos
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ToDoers.Api.Dtos
 {
     public record class UpdateTodoDto(
-        String Text,
+        [Required] String Text,
         String Tag,
         int Priority,
         DateOnly Deadline

@@ -41,7 +41,9 @@
         public static RouteGroupBuilder MapTodosEndpoints(this WebApplication app)
         {
 
-            var group = app.MapGroup("todos");
+            var group = app.MapGroup("todos").WithParameterValidation();
+
+            
 
             group.MapGet("/", () => ToDos);
 
@@ -65,7 +67,7 @@
                 ToDos.Add(ToDo);
 
                 return Results.CreatedAtRoute(GetToDoEndpointName, new { id = ToDo.Id }, ToDo);
-            }).WithParameterValidation();
+            });
 
             group.MapPut("/{id}", (int id, UpdateTodoDto update) =>
             {
