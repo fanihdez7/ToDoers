@@ -30,37 +30,37 @@
 
             
 
-            group.MapGet("/", 
-                (TodoContext dbContext) =>                
-                    dbContext.Todos
-                            .Include(todo => todo.Tag)
-                            .Select(todo => todo.ToSummaryDto())
-                            .AsNoTracking()
-                );
+            group.MapGet("/", async (TodoContext dbContext) =>                
+                await dbContext.Todos
+                        .Include(todo => todo.Tag)
+                        .Select(todo => todo.ToSummaryDto())
+                        .AsNoTracking()
+                        .ToListAsync()
+            );
 
-            group.MapGet("/{id}", (int id, TodoContext dbContext) =>
+            group.MapGet("/{id}", async (int id, TodoContext dbContext) =>
             {
 
-                Todo? todo = dbContext.Todos.Find(id);
+                Todo? todo = await dbContext.Todos.FindAsync(id);
                 return todo is null ? Results.NotFound() : Results.Ok(todo.ToDetailDto());
 
             }).WithName(GetToDoEndpointName);
 
-            group.MapPost("/", (CreateTodoDto newToDo, TodoContext dbContext) =>
+            group.MapPost("/", async (CreateTodoDto newToDo, TodoContext dbContext) =>
             {
 
 
                 Todo todo = newToDo.ToEntity();                
 
                 dbContext.Todos.Add(todo);
-                dbContext.SaveChanges();
+                await dbContext.SaveChangesAsync();
                 
                 return Results.CreatedAtRoute(GetToDoEndpointName, new { id = todo.Id }, todo.ToDetailDto());
             });
 
-            group.MapPut("/{id}", (int id, UpdateTodoDto update, TodoContext dbContext) =>
+            group.MapPut("/{id}", async (int id, UpdateTodoDto update, TodoContext dbContext) =>
             {
-                Todo todo = dbContext.Todos.Find(id);
+                Todo todo = await dbContext.Todos.FindAsync(id);
 
                 if (todo is null)
                 {
@@ -71,14 +71,14 @@
                     .CurrentValues
                     .SetValues(update.ToEntity(id));
 
-                dbContext.SaveChanges();
+                await dbContext.SaveChangesAsync();
 
                 return Results.NoContent();
             });
 
-            group.MapDelete("/{id}", (int id, TodoContext dbContext) =>
+            group.MapDelete("/{id}", async (int id, TodoContext dbContext) =>
             {
-                dbContext.Todos.Where(todo => todo.Id == id).ExecuteDelete();
+                await dbContext.Todos.Where(todo => todo.Id == id).ExecuteDeleteAsync();
                 
                 return Results.NoContent();
             });
