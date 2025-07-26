@@ -12,6 +12,7 @@ builder.Services.AddSqlServer<TodoContext>(connString);
 var app = builder.Build();
 
 app.MapTodosEndpoints();
+app.MapTagsEndpoints();
 
 await app.MigrateDbAsync();
 
