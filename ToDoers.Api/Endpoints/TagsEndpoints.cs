@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ToDoers.Api.Data;
 using ToDoers.Api.Mapping;
+using ToDoers.Api.Services;
 
 namespace ToDoers.Api.Endpoints
 {
@@ -10,12 +11,10 @@ namespace ToDoers.Api.Endpoints
         {
             var group = app.MapGroup("tags");
 
-            group.MapGet("/", async (TodoContext dbContext) =>
-                await dbContext.Tags
-                    .Select(tag => tag.ToDto())
-                    .AsNoTracking()
-                    .ToListAsync()
-            );
+            group.MapGet("/", async (ITagService tagService) => {
+                var result = await tagService.GetTagsAsync();
+                return Results.Ok(result);
+            });
 
             return group;
         }

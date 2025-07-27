@@ -5,6 +5,8 @@
     using ToDoers.Api.Dtos;
     using ToDoers.Api.Entities;
     using ToDoers.Api.Mapping;
+    using ToDoers.Api.Services;
+    using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
     /// <summary>
     /// Defines the <see cref="ToDosEndpoints" />
@@ -30,56 +32,34 @@
 
             
 
-            group.MapGet("/", async (TodoContext dbContext) =>                
-                await dbContext.Todos
-                        .Include(todo => todo.Tag)
-                        .Select(todo => todo.ToSummaryDto())
-                        .AsNoTracking()
-                        .ToListAsync()
-            );
-
-            group.MapGet("/{id}", async (int id, TodoContext dbContext) =>
+            group.MapGet("/", async (ITodoService todoService) => 
             {
+                var result = await todoService.GetTodosAsync();
+                return Results.Ok(result);
+            });
 
-                Todo? todo = await dbContext.Todos.FindAsync(id);
-                return todo is null ? Results.NotFound() : Results.Ok(todo.ToDetailDto());
+            group.MapGet("/{id}", async (int id, ITodoService todoService) =>
+            {
+                var result = await todoService.GetTodoByIdAsync(id);
+                return result is null ? Results.NotFound() : Results.Ok(result);
 
             }).WithName(GetToDoEndpointName);
 
-            group.MapPost("/", async (CreateTodoDto newToDo, TodoContext dbContext) =>
+            group.MapPost("/", async (CreateTodoDto newToDo, ITodoService todoService) =>
             {
-
-
-                Todo todo = newToDo.ToEntity();                
-
-                dbContext.Todos.Add(todo);
-                await dbContext.SaveChangesAsync();
-                
-                return Results.CreatedAtRoute(GetToDoEndpointName, new { id = todo.Id }, todo.ToDetailDto());
+                var result = await todoService.CreateTodoAsync(newToDo);                
+                return Results.CreatedAtRoute(GetToDoEndpointName, new { id = result.Id }, result);
             });
 
-            group.MapPut("/{id}", async (int id, UpdateTodoDto update, TodoContext dbContext) =>
+            group.MapPut("/{id}", async (int id, UpdateTodoDto update, ITodoService todoService) =>
             {
-                Todo todo = await dbContext.Todos.FindAsync(id);
-
-                if (todo is null)
-                {
-                    return Results.NotFound();
-                }
-                
-                dbContext.Entry(todo)
-                    .CurrentValues
-                    .SetValues(update.ToEntity(id));
-
-                await dbContext.SaveChangesAsync();
-
+                await todoService.UpdateTodoAsync(id, update);
                 return Results.NoContent();
             });
 
-            group.MapDelete("/{id}", async (int id, TodoContext dbContext) =>
+            group.MapDelete("/{id}", async (int id, ITodoService todoService) =>
             {
-                await dbContext.Todos.Where(todo => todo.Id == id).ExecuteDeleteAsync();
-                
+                await todoService.DeleteTodoAsync(id);
                 return Results.NoContent();
             });
 
