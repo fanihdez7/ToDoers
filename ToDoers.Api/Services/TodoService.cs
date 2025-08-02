@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata.Ecma335;
 using ToDoers.Api.Data;
 using ToDoers.Api.Dtos;
 using ToDoers.Api.Entities;
@@ -26,9 +27,10 @@ namespace ToDoers.Api.Services
             return todo.ToDetailDto();
         }
 
-        public Task DeleteTodoAsync(int id)
+        public async Task<int> DeleteTodoAsync(int id)
         {
-            throw new NotImplementedException();
+            var delete = await _dbContext.Todos.Where(todo => todo.Id == id).ExecuteDeleteAsync();
+            return delete;
         }
 
         public async Task<TodoDetailsDto?> GetTodoByIdAsync(int id)

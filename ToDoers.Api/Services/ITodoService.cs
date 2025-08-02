@@ -8,6 +8,6 @@ namespace ToDoers.Api.Services
         Task<TodoDetailsDto?> GetTodoByIdAsync(int id);
         Task<TodoDetailsDto> CreateTodoAsync(CreateTodoDto todoToCreate);
         Task<TodoDetailsDto?> UpdateTodoAsync(int id, UpdateTodoDto todoToUpdate);
-        Task DeleteTodoAsync(int id);
+        Task<int> DeleteTodoAsync(int id);
     }
 }

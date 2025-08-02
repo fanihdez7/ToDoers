@@ -11,12 +11,16 @@
         /// <summary>
         /// Gets the Todos
         /// </summary>
-        public DbSet<Todo> Todos => Set<Todo>();
-
+        public virtual DbSet<Todo> Todos => Set<Todo>();
+            
+       
         /// <summary>
         /// Gets the Tags
         /// </summary>
         public DbSet<Tag> Tags => Set<Tag>();
+
+
+        
 
         /// <summary>
         /// The OnModelCreating
