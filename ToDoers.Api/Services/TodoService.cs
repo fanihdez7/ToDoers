@@ -20,6 +20,10 @@ namespace ToDoers.Api.Services
 
         public async Task<TodoDetailsDto> CreateTodoAsync(CreateTodoDto todoToCreate)
         {
+            if(todoToCreate.TagId <= 0)
+            {
+                throw new ArgumentException("TagId must be greater than 0", nameof(todoToCreate.TagId));
+            }
 
             Todo todo = todoToCreate.ToEntity();
             _dbContext.Todos.Add(todo);
@@ -29,7 +33,9 @@ namespace ToDoers.Api.Services
 
         public async Task<int> DeleteTodoAsync(int id)
         {
-            var delete = await _dbContext.Todos.Where(todo => todo.Id == id).ExecuteDeleteAsync();
+            
+            var iQuerableTodo = _dbContext.Todos.Where(todo => todo.Id == id);
+            var delete = await iQuerableTodo.ExecuteDeleteAsync();
             return delete;
         }
 
